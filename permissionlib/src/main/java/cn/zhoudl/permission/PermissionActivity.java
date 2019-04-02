@@ -48,6 +48,7 @@ public class PermissionActivity extends AppCompatActivity {
      * 根据传入的权限去请求
      */
     private void handlePermission() {
+        // 获取所有传递过来没有授权的权限
         String[] permissions = getIntent().getStringArrayExtra(PERMISSION_KEY);
         ActivityCompat.requestPermissions(this, permissions, PERMISSION_CODE);
     }
@@ -62,11 +63,13 @@ public class PermissionActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode != PERMISSION_CODE) {
+            finish();
             return;
         }
 
         PermissionHelper.Callback callback = sWeakCallback.get();
         if (callback == null) {
+            finish();
             return;
         }
 
@@ -77,13 +80,12 @@ public class PermissionActivity extends AppCompatActivity {
             if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                 continue;
             }
-            boolean ret = ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[i]);
-            if (ret) {
-                // 禁止后没有点不再询问
-                notGrantedList.add(permissions[i]);
-            } else {
-                // 禁止后点了不再询问
+            if (isPermissionForbid(permissions[i])) {
+                // 不再询问
                 forbiddenList.add(permissions[i]);
+            } else {
+                // 再询问
+                notGrantedList.add(permissions[i]);
             }
         }
 
@@ -93,5 +95,14 @@ public class PermissionActivity extends AppCompatActivity {
             callback.onNotGranted(notGrantedList, forbiddenList);
         }
         finish();
+    }
+
+    /**
+     * 判断某权限是否被禁止
+     *
+     * @param permission 要判断的权限
+     */
+    private boolean isPermissionForbid(String permission) {
+        return !ActivityCompat.shouldShowRequestPermissionRationale(this, permission);
     }
 }
