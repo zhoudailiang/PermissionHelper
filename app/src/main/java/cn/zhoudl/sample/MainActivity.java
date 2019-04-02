@@ -5,9 +5,9 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import java.util.Map;
+import java.util.List;
 
-import cn.zhoudl.permission.ZPermission;
+import cn.zhoudl.permission.PermissionHelper;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -18,18 +18,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void requestPermission(View view) {
-        ZPermission.requestPermissions(this,
+        PermissionHelper.requestPermissions(this,
                 new String[]{
                         Manifest.permission.WRITE_EXTERNAL_STORAGE,
                         Manifest.permission.READ_PHONE_STATE},
-                new ZPermission.Callback() {
+                new PermissionHelper.Callback() {
                     @Override
                     public void onAllGranted() {
 
                     }
 
                     @Override
-                    public void onPartGranted(Map<String, Boolean> permissionMap) {
+                    public void onNotGranted(List<String> notGrantedList, List<String> forbiddenList) {
 
                     }
                 });

@@ -10,20 +10,28 @@ import android.support.v7.app.AppCompatActivity;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class PermissionActivity extends AppCompatActivity {
 
     private static final String PERMISSION_KEY = "permission_key";
     private static final int PERMISSION_CODE = 0x1001;
 
-    private static WeakReference<ZPermission.Callback> sWeakCallback;
+    /**
+     * 权限请求回调
+     */
+    private static WeakReference<PermissionHelper.Callback> sWeakCallback;
 
+    /**
+     * 提供静态方法
+     *
+     * @param context     上下文
+     * @param permissions 权限数组
+     * @param callback    回调
+     */
     public static void startActivity(@NonNull Context context,
                                      @NonNull String[] permissions,
-                                     @NonNull ZPermission.Callback callback) {
+                                     @NonNull PermissionHelper.Callback callback) {
         sWeakCallback = new WeakReference<>(callback);
         Intent intent = new Intent(context, PermissionActivity.class);
         intent.putExtra(PERMISSION_KEY, permissions);
@@ -36,23 +44,35 @@ public class PermissionActivity extends AppCompatActivity {
         handlePermission();
     }
 
+    /**
+     * 根据传入的权限去请求
+     */
     private void handlePermission() {
         String[] permissions = getIntent().getStringArrayExtra(PERMISSION_KEY);
         ActivityCompat.requestPermissions(this, permissions, PERMISSION_CODE);
     }
 
+    /**
+     * 请求回调
+     *
+     * @param requestCode  请求码
+     * @param permissions  请求权限数组
+     * @param grantResults 是否授权的结果
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode != PERMISSION_CODE) {
             return;
         }
 
-        ZPermission.Callback callback = sWeakCallback.get();
+        PermissionHelper.Callback callback = sWeakCallback.get();
         if (callback == null) {
             return;
         }
 
-        Map<String, Boolean> permissionMap = new HashMap<>();
+        List<String> notGrantedList = new ArrayList<>();
+        List<String> forbiddenList = new ArrayList<>();
+
         for (int i = 0; i < grantResults.length; i++) {
             if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                 continue;
@@ -60,17 +80,17 @@ public class PermissionActivity extends AppCompatActivity {
             boolean ret = ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[i]);
             if (ret) {
                 // 禁止后没有点不再询问
-                permissionMap.put(permissions[i], true);
+                notGrantedList.add(permissions[i]);
             } else {
                 // 禁止后点了不再询问
-                permissionMap.put(permissions[i], false);
+                forbiddenList.add(permissions[i]);
             }
         }
 
-        if (permissionMap.size() == 0) {
+        if (notGrantedList.size() + forbiddenList.size() == 0) {
             callback.onAllGranted();
         } else {
-            callback.onPartGranted(permissionMap);
+            callback.onNotGranted(notGrantedList, forbiddenList);
         }
         finish();
     }
