@@ -3,10 +3,14 @@ package cn.zhoudl.permission;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Window;
+import android.view.WindowManager;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -40,8 +44,26 @@ public class PermissionActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setStatusBarTranslucent(getWindow());
         super.onCreate(savedInstanceState);
         handlePermission();
+    }
+
+    /**
+     * 设置状态栏为透明色
+     *
+     * @param window window
+     */
+    private void setStatusBarTranslucent(Window window) {
+        if (window == null) {
+            return;
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            return;
+        }
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(Color.TRANSPARENT);
     }
 
     /**
